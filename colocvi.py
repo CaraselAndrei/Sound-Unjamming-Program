@@ -5,38 +5,29 @@ import scipy.linalg as la        # Pentru funcții standard de comparatie (ex: q
 
 
 def desc_qr(A):
-    #Calculează descompunerea QR a matricei A folosind Gram-Schmidt Modificat.
     m, n = A.shape
     Q = np.zeros((m, n))
     R = np.zeros((n, n))
 
-    # Copiem coloanele lui A în Q pentru procesare
     for j in range(n):
         v = A[:, j]
         
-        # O ortogonalizăm față de coloanele anterioare
         for i in range(j):
             R[i, j] = np.dot(Q[:, i], v)
             v = v - R[i, j] * Q[:, i]
         
-        # Calculăm norma vectorului rămas
         R[j, j] = np.linalg.norm(v)
         
-        # Normalizăm coloana și o punem în Q
         Q[:, j] = v / R[j, j]
         
     return Q, R
 
 def rez_qr(A, b):
-    """ Rezolvă Ax = b folosind QR scris de noi """
-    # 1. Descompunem A
+
     Q, R = desc_qr(A)
     
-    # 2. Calculăm y = Q_transpus * b
     y = np.dot(Q.T, b)
     
-    # 3. Rezolvăm sistemul triunghiular R * x = y (prin substituție inversă)
-    # Putem folosi o funcție simplă pentru asta sau solve din scipy pentru triunghiular
     x = np.linalg.solve(R, y) 
     
     return x
@@ -88,16 +79,10 @@ x_local = np.linspace(-1, 1, fereastra) # Axa x normalizată local
 A = np.vander(x_local, grad_polinom + 1) # Matricea sistemului
 
 for i in range(half_win, n - half_win):
-    # 1. Extragem bucata curentă de sunet (vectorul b local)
     b_local = data_zgomotos[i - half_win : i + half_win + 1]
     
-    # 2. Rezolvăm sistemul A * x = b_local folosind QR-ul nostru
     coeficienti = rez_qr(A, b_local)
     
-    # 3. Valoarea filtrată este valoarea polinomului în centru
-    # Polinomul este c0*x^2 + c1*x + c2.
-    # În centrul ferestrei, coordonata x_local este aprox 0.
-    # Putem recalcula tot vectorul estimat:
     b_estimat = np.dot(A, coeficienti)
     
     # Luăm doar punctul din mijloc
